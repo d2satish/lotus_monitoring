@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+        <title>:: Lotus Login ::</title>
+        <!--<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta charset="utf-8" />-->
+    <link rel="stylesheet" href="font.css" />
+    <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="normalize.css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="time.js"></script>
+</head>
+<body>
+<table id="upperbelt" border="0" height="14%" width="100%">
+	<tr>
+ 	   <td width="43%" height="14%">
+ 	   <img id="logo" src="http://www.lotusbroadband.com/assets/img/logo.png">
+ 	   </td>
+	   <td width="24%" height="14%">
+	   <h3 id="session">
+	        <?php
+	           session_start();
+		   //header("refresh: 2");
+		   include("connection.php");
+		   echo "welcome Mr. ".$_SESSION['username'];
+		   $user_validate = $_SESSION['username'];
+		   $search_database = "select * from monitor_users where username='$user_validate'";
+		   $search_databasse_exe = mysqli_query($conn, $search_database);
+		   $search_database_exe_result = mysqli_num_rows($search_databasse_exe);
+		     if($search_database_exe_result == 1)
+		       {
+		        //echo ' user matched';
+		        //echo '<script type="text/javascript">window.location = "http://lotusbroadband.com/monitoring/home.php";</script>';
+		       }
+		     else
+		       {
+		        //echo 'Please provide correct username & password';
+		          echo '<script type="text/javascript">alert("Need access then login first!!");window.location = "http://lotusbroadband.com/monitoring/login.html";</script>';
+		       }
+		 ?>
+	    </h3>
+	    <a id="session1" href="logout.php">Logout</a>
+	</td>
+    	<td width="33%" height="14%">
+	   <div id="timeContainer2" align="right">
+	   <div id="timeContainer">
+   		<span id="h-m-container">
+       		<span class="inline-block" id="h"></span>
+       		<span class="inline-block" id="m"></span>
+        	</span>
+		<span id="s-ap-container">
+       		<span class="block" id="s"></span>
+       		<span class="block" id="am-pm"></span>
+		</span>
+		<span id="date"></span>
+	   </div>
+	   </div>
+	</td>
+	</tr>
+</table>
+
+<nav class="nav">
+  <a href="http://lotusbroadband.com/monitoring/home.php" class="nav-item is-active" active-color="orange">Dashboard</a>
+  <a href="http://lotusbroadband.com/monitoring/pstatus.php" class="nav-item" active-color="green">Ping status</a>
+  <a href="http://lotusbroadband.com/monitoring/lcontact.php" class="nav-item" active-color="blue">Location Contact</a>
+  <!--//<a href="#" class="nav-item" active-color="red">About</a>
+  <a href="#" class="nav-item" active-color="rebeccapurple">Testmonials</a>-->
+  <span class="nav-indicator"></span>
+    <script src="snake.js"> </script>
+</nav>
+
+<?php 
+include('connection.php');
+header("Refresh: 5");
+$sql = "select count(*) as number, state from monitor_ip_state where s_no in (select sno from (select max(s_no) as sno ,ip_address from monitor_ip_state group by ip_address) satish) group by state";
+$sqlexe = mysqli_query($conn, $sql);
+$sqlexenum = mysqli_num_rows($sqlexe);
+if($sqlexenum > 0)
+  {
+    echo '<table style="margin-left:45%; margin-top:15px;">';
+    while($roww = $sqlexe -> fetch_assoc())
+     {
+        $dstate = $roww["state"];
+        $count = $roww["number"];
+        echo '<tr>
+	    <td style="padding: 10px; text-align: left;background-color:grey;border-radius:10px;">
+	        <font style="color:white;letter-spacing: 3px;font-weight: bolder;font-size: large;align:right;">'.$dstate.'
+                </font>
+            </td>
+	    <td style="padding: 10px; text-align: left; background-color:grey;border-radius:10px;">
+	        <font style="color:white;letter-spacing: 3px;font-weight: bolder;font-size:large;align:right;">'.$count.'
+                </font>
+            </td>
+           </tr>';
+     }
+   echo '</table>';
+  }
+?>
+<table border="0" style="width:100%; margin-top:8px;">
+<tr><td>
+<?php
+include ('connection.php');
+//$dashtable = "select @i:=@i+1 as s_no, ip_address, up_down_time, state from monitor_ip_state, (select @i:=0) p where s_no in (select sno from (select max(s_no) as sno,  ip_address from monitor_ip_state group by ip_address) satish) and state = 'Online'";
+//$dashtable = "select t1.s_no, t1.ip_address, t1.up_down_time as down_time, t1.state as offline_state, t3.up_down_time as last_uptime, t3.state as online_state from monitor_ip_state as t1 inner join (select max(s_no) as sno, ip_address from monitor_ip_state where state = 'Offline' group by ip_address) as t2 on t1.s_no = t2.sno left join (select a1.* from monitor_ip_state as a1, (select max(s_no) as sno,  ip_address from monitor_ip_state where state = 'Online' group by ip_address) as a2 where a1.s_no = a2.sno) as t3 on t2.ip_address = t3.ip_address;";
+$dashexe = mysqli_query($conn, $dashtable);
+$dashnum = mysqli_num_rows($dashexe);
+echo '<table class="online">
+	<tr>
+	<th style="text-align:center;">S.no</th>
+	<th style="text-align:center;">Ip Address</th>
+	<th style="text-align:center;">up-time</th>
+	<th style="text-align:center;">Last down-time</th>
+	<th style="text-align:center;">Current State</th>
+	</tr>';
+if($dashnum > 0)
+{
+while ($loop = $dashexe -> fetch_assoc())
+{
+$sno = $loop["s_no"];
+$ip = $loop["ip_address"];
+$time = $loop["last_uptime"];
+$lastdtime = $loop["down_time"];
+//$state = $loop["state"];
+$online = "Online";
+exec("sudo ping -f -c 5 -w 1 " . $ip, $output, $result);
+//echo $result;
+if($state == $online && $result == 0)
+{
+echo '<tr>
+	<td>'.$sno.'</td>
+	<td style="font-weight: bolder;">'.$ip.'</td>
+	<td>'.$time.'</td>
+	<td>'.$lastdtime.'</td>
+	<td style="background-color:green;"><font style="color:white;font-weight: bolder;">Online</font></td></tr>';
+}
+else
+{
+$ip_status = "insert into monitor_ip_state (ip_address, state) values ('$ip','Offline')";
+$ip_status_exe = mysqli_query($conn, $ip_status);
+}
+}
+}
+echo "</table>";
+
+//echo $online;
+?>
+</td>
+<td>
+<?php
+include ('connection.php');
+$offlinetable = "select @i:=@i+1 as s_no, ip_address, up_down_time, state from monitor_ip_state, (select @i:=0) r where s_no in (select sno from (select max(s_no) as sno,  ip_address from monitor_ip_state group by ip_address) satish) and state = 'Offline'";
+$offlineexe = mysqli_query($conn, $offlinetable);
+$offlinenum = mysqli_num_rows($offlineexe);
+echo '<table class="offline">
+        <tr >
+        <th style="text-align:center;">S.no</th>
+        <th style="text-align:center;">Ip Address</th>
+        <th style="text-align:center;">Down-time</th>
+        <th style="text-align:center;">Last Up-time</th>
+        <th style="text-align:center;">Current State</th>
+        </tr>';
+if($offlinenum > 0)
+{
+while ($loop1 = $offlineexe -> fetch_assoc())
+{
+$z=$loop1["s_no"];
+$i = $loop1["ip_address"];
+$tim = $loop1["up_down_time"];
+$stat = $loop1["state"];
+$onlin = "Offline";
+exec("sudo ping -f -c 5 -w 1 " . $i, $output, $offlineresult);
+
+if($stat == $onlin && $offlineresult == 1)
+{
+echo '<tr>
+        <td>'.$z.'</td>
+        <td style="font-weight: bolder;">'.$i.'</td>
+        <td>'.$tim.'</td>
+        <td></td>
+        <td style="background-color:red;"><font class="offline_blink" style="color:white;font-weight: bolder;">'.$stat.'</font></td></tr>';
+}
+else
+{
+$ip_status1 = "insert into monitor_ip_state (ip_address, state) values ('$i','Online')";
+$ip_status1_exe = mysqli_query($conn, $ip_status1);
+}
+}
+echo "</table>";
+}
+?>
+</td>
+</tr>
+</table>
+</body>
+</html>
